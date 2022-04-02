@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/css/bootstrap.min.css">
+    <script src="./lib/jquery-3.6.0.min.js"></script>
+</head>
+
+<body>
+    <!-- 1.文件选择框 -->
+    <input type="file" name="" id="file1" style="margin: 15px 10px;">
+    <!-- 2.上传文件的按钮 -->
+    <button id="btnUpload" style="margin:5px 10px;">上传文件</button>
+    </br>
+
+    <!-- 4. 进度条展示 -->
+    <div class="progress" style="margin: 10px 10px; width: 500px;">
+        <div class="progress-bar progress-bar-striped active" style="width: 0%" id="progressbar">
+            0%
+        </div>
+    </div>
+
+    <!-- 3.img标签，显示上传成功后的图片 -->
+    <img src="" id="img" width="900">
+
+
+    <script>
+        // 获取文件上传按钮
+        var btnUpload = document.querySelector('#btnUpload');
+
+        // 为上传按钮绑定监听事件
+        btnUpload.addEventListener('click', function() {
+            // 获取选择的文件列表
+            var files = document.querySelector('#file1').files
+            if (files.length <= 0) {
+                return alert('请上传文件！')
+            }
+            // console.log("用户已选择要上传的文件");
+            var fd = new FormData()
+            fd.append('avatar', files[0])
+
+            // 创建xhr对象
+            var xhr = new XMLHttpRequest()
+
+            // 用于监听上传进度
+            xhr.upload.onprogress = function(e) {
+                // TRUE代表上传文件的大小可以计算
+                if (e.lengthComputable) {
+                    var percentComplete = Math.ceil((e.loaded / e.total) * 100)
+                    console.log(percentComplete);
+
+                    //用来更新进度条，原生JS写法
+                    var pgBar = document.getElementById("progressbar")
+                    var pgBarAttValue = "width :" + percentComplete + "%";
+                    pgBar.setAttribute("style", pgBarAttValue);
+                    pgBar.innerHTML = percentComplete + '%';
+                    // JQuery写法
+                    // $("#progressbar").attr("style", "width :" + percentComplete + "%").html(percentComplete + '%')
+                }
+            }
+
+            // 监听上传完成事件
+            xhr.upload.onload = function() {
+                console.log("上传已完成");
+                //$("#progressbar").removeClass().addClass("progress-bar progress-bar-sucess")
+                $("#progress").hide();
+            }
+
+
+            // 发起post请求，上传文件到制定目录
+            xhr.open('POST', 'http://127.0.0.1:8081/api/upload')
+            xhr.send(fd);
+
+
+            //监听服务器响应
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    // console.log(xhr.responseText);
+
+                    // 获取响应的数据
+                    var data = JSON.parse(xhr.responseText)
+                        //console.log(data);
+
+                    if (data.status === 200) {
+                        console.log(data.url);
+                        document.querySelector('#img').src = 'http://127.0.0.1:8081' + data.url;
+                    } else
+                        console.log('文件上传失败！')
+                }
+            }
+        })
+    </script>
+
+</body>
+
+</html>
